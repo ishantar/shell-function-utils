@@ -10,13 +10,14 @@ function pnchars() {
    local char=${opts[c]:-:}
 
    if (( args )); then
-     local str=$(echo ${args} |
-                  sed -r "{:B;  x;  s/^/${char}/;  x;"'
-                           s/(.+)/echo $((\1 - 1))/e
-                           :K; tK;  s/^0$//;  TB;  x; }' )
+     local n str
+     for n in $(seq ${args}); do
+       str="${char}${str}"
+     done
+
      echo ${str}
-     history -s "pnchars ${@}"
      history -s $(echo ${str})
+     history -s "pnchars ${@}"
    fi
 
  }
