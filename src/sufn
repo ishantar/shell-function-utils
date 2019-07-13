@@ -1,0 +1,3 @@
+function sufn() {
+  sudo sh -c "`declare -f $1`; $1 ${@:2}"
+ }

@@ -1,0 +1,44 @@
+#!/bin/bash
+
+function syscat() {
+
+    if [ ! -e $1 ]; then
+      return 1;
+    fi
+
+    if [ -z "${3}" ]; then
+      local -i colmn=${2:-28}
+      local colw='                                                                            '
+      if [ $colmn -gt 75 ]; then
+        if [ $colmn -gt 150 ]; then
+          echo 1>&2 'error: column widths greater than 150 are not supported'
+          return -1
+        else
+          colw=${colw}${colw}
+        fi
+      fi
+      colw=${colw:0:${colmn}}
+      prnt='sed -r "1s/^/  ${e//\\//\\\/}${colw}/
+                 2,\$s/^/${colw}/
+                     s/^(.{${colmn}}) */\1/" ${arg}'
+      syscat $1 $colmn "'${colw}'"
+    else
+
+      echo -e "\\n${1%/}"
+      local arg=$(sudo ls -AHd --indicator-style=none --color=never $1)
+
+      if [ -f $arg ]; then
+        e=${arg#${1}}
+        eval "${prnt}"
+      else
+        for e in $(sudo ls -A1 --indicator-style=none --color=never ${arg}); do
+          e=${arg%/}/${e#/}
+          if [ -h ${e} ]; then
+            e=$(sudo ls -AHd --indicator-style=none --color=never $e)
+          fi
+          syscat ${e} x x
+        done
+     fi
+
+   fi
+ }

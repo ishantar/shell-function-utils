@@ -1,0 +1,65 @@
+#!/bin/bash
+
+shopt -qs expand_aliases
+
+alias optspec='declare -a args;
+               declare -A opts; 
+               optspec_fn ${#} ${@}'
+
+
+function optspec_fn() {
+  if [ -n "${1//[0-9]}" ] || (( ${#} - ${1} - 2 )); then
+    echo "error: optspec should be invoked via the alias defined "\
+         "in ${shell_lib_dir}/optspec"  1>&2
+    return 1  
+  fi
+  local param=1
+  local specs=${!#//,/ }
+  local matched spec
+
+  while (( ${#} - ++param )); do                     # outer loop params
+    matched=0
+
+    if [ "${!param}" = "--" ]; then                  # handle end-of-options switch
+      matched=1
+      specs=
+    else
+
+      for spec in ${specs}; do                       # inner loop specs
+        dif=${!param#-${spec%:}}                     # discard param/spec common leading
+        if [ "${dif}" != ${!param} ]; then           # match: remaining != original
+          matched=1
+
+          if [ -z "${spec#*:}" ]; then               # arg-required spec ('*:') 
+            if [ -z "${dif}" ]; then                 # no trailing chars supplied: (arg opt)
+              let param++                              # (assume next param is arg)
+              dif=${!param}
+            fi
+            opts[${spec%:}]=${dif#=}                 # add opt=arg
+          else
+            opts[${spec%:}]=1                        # add opt=1 (non-arg opt)
+            if [ -n "${dif}" ]; then                 # trailing chars supplied: (non-arg opt)
+              set - ${@/#${!param}/-${dif}}            # (assume tail is more opts)
+              let param--
+            fi
+          fi
+          break                                      # matched: break to next param
+        fi
+      done
+
+    fi
+    (( matched )) ||  args[${#args[@]}]="${!param}"  # no matching spec: non-opt param 
+  done
+
+ }
+
+
+if [ ${0##*/} = "optspec" ]; then                    # handle script mode
+  spec=${!#}
+  set - "${@:1:${#}-1}"
+  optspec "${spec}"
+
+  echo ${args[@]@A}                                  # print assignable form to outer scope
+  echo ${opts[@]@A}
+  
+fi

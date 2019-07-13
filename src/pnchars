@@ -1,0 +1,26 @@
+#!/bin/bash
+
+alias optspec &>/dev/null ||  source $(which optspec)
+
+
+function pnchars() {
+
+   optspec c:
+   args=$(( ${args[@]} ))
+   local char=${opts[c]:-:}
+
+   if (( args )); then
+     local str=$(echo ${args} |
+                  sed -r "{:B;  x;  s/^/${char}/;  x;"'
+                           s/(.+)/echo $((\1 - 1))/e
+                           :K; tK;  s/^0$//;  TB;  x; }' )
+     echo ${str}
+     history -s "pnchars ${@}"
+     history -s $(echo ${str})
+   fi
+
+ }
+
+
+[ ${0##*/} = pnchars ] &&  pnchars ${@}
+

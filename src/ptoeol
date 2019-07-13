@@ -1,0 +1,40 @@
+function ptoeol() {
+   local file line
+   if [ ${#} -eq 0 ]; then
+     read -ep 'file line :  ' file line               # prompt if no args
+   else
+     file="${1}"
+     line="${@:2}"                                    # accept word-split expression
+   fi
+   if [ -z "${line}" -a -n "${file//[^:]}" ]; then    # accept 'file:line` style
+     line="${file##*:}"
+     file="${file%:*}"
+   fi
+
+   local lineno=$(( ${line} ))                        # lineno is decimal int
+
+   if [ ! -e "${file}" ]; then                        # check sed arguments
+
+     echo 1>&2 "file '$file\` not found"
+     return -1
+   elif [ ${lineno} -lt 1 ]; then
+     echo 1>&2 "invalid line number ('$line\`)"
+     return -2
+   else                                               # produce output
+
+     local out="`sed -nr ${lineno}'{ :B; $!N;  s/([^\\])\n.*$/\1/; $!TB;  p; }' "${file}"`"
+                                                      # line numbering:
+     local out_lines=`echo "${out}" | wc -l`            # set up tabstop alignment
+     local ncharln=`echo $((lineno + out_lines + 2)) | wc -m`
+     ncharln=$(( ((8 - ncharln % 8) % 8) + ncharln ))
+     local lnws="`nchar $ncharln  | sed 'y/:/ /'`"
+
+     for ln in $(seq ${out_lines}); do
+       out="`echo "${out}"  | sed -r "${ln}s/^/$(( lineno + ln - 1 )):${lnws}##/
+                                      ${ln}s/^(.{$ncharln}) *##/\1##/
+                                      ${ln}s/^([0-9]+: *)  ##/\1~ /" `"
+     done
+                                                      # emit output
+     echo "${out}"
+   fi
+ }

@@ -1,0 +1,39 @@
+#!/bin/bash
+
+
+# shell_lib_dir autodetection
+# get the file/line we are being sourced from
+# canonicalize the pathname used to source us
+
+if ! [ -v shell_lib_dir ]; then
+  srcln=($(caller))
+  read -a lntext <<<$(sed -n ${srcln[0]}p ${srcln[1]})
+
+  for n in $(seq -1 -1 -${#lntext[@]}); do                       # last-to-first
+    shell_lib_dir="${lntext[$n]%lib.source*}"                    # allow trailing ';'
+
+    if [ "${shell_lib_dir}" != "${lntext[$n]}" ]; then
+        export shell_lib_dir=$(eval "realpath ${shell_lib_dir}")  # force tilde expansion
+      break
+    else
+      unset shell_lib_dir
+    fi
+  done
+  unset srcln lntext n
+fi
+
+
+if ! [ -v shell_lib_dir ]; then
+  echo -e 1>&2 'error loading shell-lib: shell_lib_dir autodetection failed.\n'\
+               'this variable may be set manually before sourcing the libsource script.'
+
+# load components as per config file
+else
+  source ${shell_lib_dir}/lib.conf
+
+  for file in ${shell_lib_enable[@]/#/${shell_lib_dir}\/src\/}; do
+    source $file
+  done
+  unset file
+
+fi

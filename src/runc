@@ -1,0 +1,57 @@
+function runc() {
+   clear
+   local lRUNCFLAGS="-x c -std=gnu11 -rtlib=compiler-rt -fuse-ld=lld -lm ${RUNCFLAGS}"
+
+   echo -E "${1}" | cat |
+      clang ${lRUNCFLAGS} -Werror -o stdin.out - 2>/dev/null 1>&2
+   local -i clang_exitcode=$?
+
+   ((clang_exitcode))  &&  {
+      echo 1>&2 '
+======================================================
+
+Compilation output:
+______________________________________________________
+
+'
+      echo -E "${1}" | cat |   clang ${lRUNCFLAGS} -o stdin.out  -
+      local -i clang_exitcode=$?
+   }
+
+   ((clang_exitcode))  ||  {
+      echo 1>&2 '
+______________________________________________________
+
+Program output:
+______________________________________________________
+
+'
+      ./stdin.out ${@:2}
+      rm ./stdin.out
+      echo 1>&2 ''
+   }
+}
+
+function runcc() {
+    history -s runc \''
+#include <stdlib.h>
+#include <stdio.h>
+#include <stddef.h>
+#include <stdarg.h>
+#include <string.h>
+#include <math.h>
+#include <stdint.h>
+#include <limits.h>
+#include <fenv.h>
+#include <complex.h>
+#include <errno.h>
+
+
+int main(int argc, char *argv[])
+ {
+    printf("%s \n", "replaceme");
+
+    return 0;
+ }
+'\'
+}
