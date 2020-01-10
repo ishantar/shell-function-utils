@@ -1,0 +1,18 @@
+shopt -s expand_aliases
+
+alias dcs=$(echo '[[ x$- != *f* ]]  ||  __set_glob_cmd() { :; }; '  \
+                 'set -f; '                                         \
+                 '__dcs_fn ' )
+
+__set_glob_cmd() { set +f; }
+
+__dcs_fn ()
+{
+   eval "dc -e '8 k $@ p'";
+   local _return=$?
+
+   __set_glob_cmd;
+   __set_glob_cmd() { set +f; };
+
+   return $_return;
+}

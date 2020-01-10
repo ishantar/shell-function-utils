@@ -1,0 +1,17 @@
+alias lobjdump='objdump --LESS '
+alias objdump='__objdump__ '
+
+__objdump__ () 
+{ 
+   local _item _less _switches _args;
+
+   for _item in $@;  do
+     case $_item in 
+       --LESS)   _less="less -F";;
+       -?*)      _switches="$_item $_switches";;
+       *)        _args="$_item $_args";;
+     esac;
+   done;
+
+   eval "$(which objdump) ${_switches:- -dr} $_args" | ${_less:- cat};
+}

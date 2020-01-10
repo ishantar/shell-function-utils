@@ -1,12 +1,16 @@
 function runc() {
    clear
-   local lRUNCFLAGS="-x c -std=gnu11 -rtlib=compiler-rt -fuse-ld=lld -lm ${RUNCFLAGS}"
+   local lRUNCFLAGS="$(echo -xc - -g -pipe -std=gnu18 -lm ${RUNCFLAGS} \
+           -include stdlib.h -include stdio.h -include stddef.h        \
+           -include stdarg.h -include string.h -include math.h         \
+           -include stdint.h -include limits.h -include fenv.h         \
+           -include complex.h -include errno.h )"
 
    echo -E "${1}" | cat |
-      clang ${lRUNCFLAGS} -Werror -o stdin.out - 2>/dev/null 1>&2
-   local -i clang_exitcode=$?
+      gcc ${lRUNCFLAGS//      / } -Werror -o stdin.out 2>/dev/null 1>&2
+   local -i cc1_exitcode=$?
 
-   ((clang_exitcode))  &&  {
+   ((cc1_exitcode))  &&  {
       echo 1>&2 '
 ======================================================
 
@@ -14,11 +18,11 @@ Compilation output:
 ______________________________________________________
 
 '
-      echo -E "${1}" | cat |   clang ${lRUNCFLAGS} -o stdin.out  -
-      local -i clang_exitcode=$?
+      echo -E "${1}" | cat |   gcc ${lRUNCFLAGS//      / } -o stdin.out  -
+      cc1_exitcode=$?
    }
 
-   ((clang_exitcode))  ||  {
+   ((cc1_exitcode))  ||  {
       echo 1>&2 '
 ______________________________________________________
 
@@ -55,3 +59,4 @@ int main(int argc, char *argv[])
  }
 '\'
 }
+

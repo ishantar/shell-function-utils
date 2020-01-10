@@ -6,29 +6,28 @@
 # canonicalize the pathname used to source us
 
 if ! [ -v shell_lib_dir ]; then
-  srcln=($(caller))
-  read -a lntext <<<$(sed -n ${srcln[0]}p ${srcln[1]})
+  argtext="${BASH_ARGV[@]}";
 
-  for n in $(seq -1 -1 -${#lntext[@]}); do                       # last-to-first
-    shell_lib_dir="${lntext[$n]%lib.source*}"                    # allow trailing ';'
-
-    if [ "${shell_lib_dir}" != "${lntext[$n]}" ]; then
-        export shell_lib_dir=$(eval "realpath ${shell_lib_dir}")  # force tilde expansion
-      break
-    else
-      unset shell_lib_dir
+  for _n in $(seq -10 -1 -${#argtext}); do                      # scan back-to-front
+    if [ "${argtext: $_n:10}" == "lib.source" ]; then           # find end of path
+        argtext="${argtext:0:$_n}";                             # trim
+        shell_lib_dir="$(ls -dHF  ${argtext##*[^\\] })";        # deref symlinks
+        break;
     fi
   done
-  unset srcln lntext n
+  if [ -d $shell_lib_dir ]; then
+      export shell_lib_dir=$(realpath $shell_lib_dir);
+  fi
+
+  unset argtext _n
 fi
 
 
-if ! [ -v shell_lib_dir ]; then
+if ! [ -v shell_lib_dir ]; then                                # complain and fail...
   echo -e 1>&2 'error loading shell-lib: shell_lib_dir autodetection failed.\n'\
                'this variable may be set manually before sourcing the libsource script.'
 
-# load components as per config file
-else
+else                                                           # ...else, config and load
   source ${shell_lib_dir}/lib.conf
 
   for file in ${shell_lib_enable[@]/#/${shell_lib_dir}\/src\/}; do
