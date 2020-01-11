@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 function syscat() {
 
     if [ ! -e $1 ]; then
@@ -42,3 +43,6 @@ function syscat() {
 
    fi
  }
+
+
+[[ $0 == *syscat* ]] &&  eval "syscat $@"

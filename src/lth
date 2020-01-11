@@ -1,5 +1,11 @@
-lth () 
-{ 
+#!/bin/bash
+
+
+lth ()
+{
     history -s -- lth "${*}";
     history -s -- "` ${@} `"
 }
+
+
+[[ $0 == *lth* ]] &&  eval "lth $@"

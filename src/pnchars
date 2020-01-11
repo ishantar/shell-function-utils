@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 alias optspec &>/dev/null ||  source $(which optspec)
 
 
@@ -23,5 +24,4 @@ function pnchars() {
  }
 
 
-[ ${0##*/} = pnchars ] &&  pnchars ${@}
-
+[[ $0 == *pnchars* ]] &&  eval "pnchars $@"

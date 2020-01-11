@@ -1,7 +1,10 @@
 #!/bin/bash
 
-function rgl() {
-   eval "rg -pH ${@@Q} | less -RF"
- }
 
-[ ${0##*/} = rgl ] &&  rgl ${@}
+rgl ()
+{
+   eval "rg -pH ${@@Q} | less -RF"
+}
+
+
+[[ $0 == *rgl* ]] &&  eval "rgl $@"

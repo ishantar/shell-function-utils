@@ -1,3 +1,6 @@
+#!/bin/bash
+
+
 function runc() {
    clear
    local lRUNCFLAGS="$(echo -xc - -g -pipe -std=gnu18 -lm ${RUNCFLAGS} \
@@ -60,3 +63,5 @@ int main(int argc, char *argv[])
 '\'
 }
 
+
+[[ $0 == *runc* ]] &&  echo 1>&2 error: runc may not be executed as a script

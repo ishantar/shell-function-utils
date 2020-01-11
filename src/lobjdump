@@ -1,12 +1,17 @@
-alias lobjdump='objdump --LESS '
-alias objdump='__objdump__ '
+#!/bin/bash
+shopt -qs expand_aliases
 
-__objdump__ () 
-{ 
+
+alias objdump='__objdump_wrapper '
+alias lobjdump='__objdump_wrapper --LESS '
+alias __objdump_wrapper='__objdump_wrapper_fn '
+
+__objdump_wrapper_fn ()
+{
    local _item _less _switches _args;
 
    for _item in $@;  do
-     case $_item in 
+     case $_item in
        --LESS)   _less="less -F";;
        -?*)      _switches="$_item $_switches";;
        *)        _args="$_item $_args";;
@@ -15,3 +20,6 @@ __objdump__ ()
 
    eval "$(which objdump) ${_switches:- -dr} $_args" | ${_less:- cat};
 }
+
+
+[[ $0 == *lobjdump* ]] &&  eval "lobjdump $@"

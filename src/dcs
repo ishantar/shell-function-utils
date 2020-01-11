@@ -1,12 +1,17 @@
-shopt -s expand_aliases
+#!/bin/bash
+shopt -qs expand_aliases
+
 
 alias dcs=$(echo '[[ x$- != *f* ]]  ||  __set_glob_cmd() { :; }; '  \
                  'set -f; '                                         \
                  '__dcs_fn ' )
 
-__set_glob_cmd() { set +f; }
+__set_glob_cmd()
+{
+   set +f;
+}
 
-__dcs_fn ()
+__dcs_fn()
 {
    eval "dc -e '8 k $@ p'";
    local _return=$?
@@ -16,3 +21,6 @@ __dcs_fn ()
 
    return $_return;
 }
+
+
+[[ $0 == *dcs* ]] &&  eval "dcs $@"

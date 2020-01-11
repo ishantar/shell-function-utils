@@ -1,28 +1,36 @@
+#!/bin/bash
+
+
 whichs()
 {
-   local _extglob=:;
-     [ "x${BASHOPTS//extglob}" == "x$BASHOPTS" ] ||
-        { shopt -s extglob;
-          _extglob="shopt -u extglob";        };
-   local _switches=" ${@/#!(-?*)} "; 
-     _switches="${_switches// /:}";
-   local _match;
-     [ "x${_switches/:i:}" != "x$_switches" ] &&
-        { _match=i;                        };
-     [ "x${_switches/:r:}" != "x$_switches" ] &&
-        { _match="-${_match}regex";        }  ||
-        { _match="-${_match}name";         };
-   local _args="${@@Q}";
-     _args="${_args//[\']-[^\']*([^\' ])[\']}";
-     _args="${_args##+( )}";
-     _args="${_args%%+( )}";
-   $_extglob;
+   [[ x$BASHOPTS == *extglob* ]] &&
+      { local _extglob=s;     }  ||
+      { local _extglob=u;
+        shopt -qs extglob;    };
 
+   local _switches=" ${@/#!(-?*)} ";
+      _switches="${_switches// /:}";
+   local _match;
+   [ "x${_switches/:i:}" != "x$_switches" ] &&
+      { _match=i;                        };
+   [ "x${_switches/:r:}" != "x$_switches" ] &&
+      { _match="-${_match}regex";        }  ||
+      { _match="-${_match}name";         };
+   local _args="${@@Q}";
+      _args="${_args//[\']-[^\']*([^\' ])[\']}";
+      _args="${_args##+( )}";
+      _args="${_args%%+( )}";
    local _bindir;
    local _cmd="$_match ${_args// / -o $_match } 2>/dev/null";
-      
-   for _bindir in ${PATH//:/ }; do 
+
+   [ "x${_extglob}" == "xu" ] &&
+      { shopt -qu extglob; };
+
+   for _bindir in ${PATH//:/ }; do
      eval "find $_bindir $_cmd" &
    done |
      xargs -rd\\\\n\n echo -e;
 }
+
+
+[[ $0 == *whichs* ]] &&  eval "whichs $@"

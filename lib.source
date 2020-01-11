@@ -24,8 +24,9 @@ fi
 
 
 if ! [ -v shell_lib_dir ]; then                                # complain and fail...
-  echo -e 1>&2 'error loading shell-lib: shell_lib_dir autodetection failed.\n'\
-               'this variable may be set manually before sourcing the libsource script.'
+  echo -e 1>&2 error loading \`shell-lib\':                                \\n\
+    auto-detect failed to locate shell-lib installation                    \\n\
+    the path is configured with environment variable \`shell_lib_dir\'
 
 else                                                           # ...else, config and load
   source ${shell_lib_dir}/lib.conf
@@ -33,6 +34,6 @@ else                                                           # ...else, config
   for file in ${shell_lib_enable[@]/#/${shell_lib_dir}\/src\/}; do
     source $file
   done
-  unset file
+  unset file shell_lib_enable
 
 fi
