@@ -24,4 +24,4 @@ function pnchars() {
  }
 
 
-[[ $0 == *pnchars* ]] &&  eval "pnchars $@"
+[[ $0 != *pnchars* ]] ||  eval "pnchars $@"

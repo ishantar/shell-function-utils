@@ -7,4 +7,4 @@ rgl ()
 }
 
 
-[[ $0 == *rgl* ]] &&  eval "rgl $@"
+[[ $0 != *rgl* ]] ||  eval "rgl $@"

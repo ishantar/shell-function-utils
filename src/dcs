@@ -2,9 +2,9 @@
 shopt -qs expand_aliases
 
 
-alias dcs=$(echo '[[ x$- != *f* ]]  ||  __set_glob_cmd() { :; }; '  \
-                 'set -f; '                                         \
-                 '__dcs_fn ' )
+alias dcs='[[ ! x$- =~ x.*f.* ]] || __set_glob_cmd() { :; };
+             set -f; 
+            __dcs_fn'
 
 __set_glob_cmd()
 {
@@ -23,4 +23,4 @@ __dcs_fn()
 }
 
 
-[[ $0 == *dcs* ]] &&  eval "dcs $@"
+[[ $0 != *dcs* ]] ||  eval "dcs $   q@"

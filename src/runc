@@ -3,7 +3,7 @@
 
 function runc() {
    clear
-   local lRUNCFLAGS="$(echo -xc - -g -pipe -std=gnu18 -lm ${RUNCFLAGS} \
+   local lRUNCFLAGS="$(echo -xc - -g -pipe -lm ${RUNCFLAGS}            \
            -include stdlib.h -include stdio.h -include stddef.h        \
            -include stdarg.h -include string.h -include math.h         \
            -include stdint.h -include limits.h -include fenv.h         \
@@ -64,4 +64,4 @@ int main(int argc, char *argv[])
 }
 
 
-[[ $0 == *runc* ]] &&  echo 1>&2 error: runc may not be executed as a script
+[[ $0 != *runc* ]] ||  echo 1>&2 error: runc may not be executed as a script

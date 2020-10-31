@@ -45,4 +45,4 @@ function syscat() {
  }
 
 
-[[ $0 == *syscat* ]] &&  eval "syscat $@"
+[[ $0 != *syscat* ]] ||  eval "syscat $@"

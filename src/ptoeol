@@ -40,3 +40,7 @@ function ptoeol() {
      echo "${out}"
    fi
  }
+
+
+[[ $0 != *ptoeol* ]] || eval "ptoeol ${@}"
+

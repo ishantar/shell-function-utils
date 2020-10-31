@@ -11,7 +11,8 @@ if ! [ -v shell_lib_dir ]; then
   for _n in $(seq -10 -1 -${#argtext}); do                      # scan back-to-front
     if [ "${argtext: $_n:10}" == "lib.source" ]; then           # find end of path
         argtext="${argtext:0:$_n}";                             # trim
-        shell_lib_dir="$(ls -dHF  ${argtext##*[^\\] })";        # deref symlinks
+        shell_lib_dir="$(ls -dHf --indicator-style=none       \
+                            ${argtext##*[^\\] })";              # deref symlinks
         break;
     fi
   done
@@ -34,6 +35,7 @@ else                                                           # ...else, config
   for file in ${shell_lib_enable[@]/#/${shell_lib_dir}\/src\/}; do
     source $file
   done
+
   unset file shell_lib_enable
 
 fi

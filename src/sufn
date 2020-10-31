@@ -7,4 +7,4 @@ sufn ()
 }
 
 
-[[ $0 == *sufn* ]] &&  eval "sufn $@"
+[[ $0 != *sufn* ]] ||  eval "sufn $@"

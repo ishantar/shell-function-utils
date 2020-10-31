@@ -1,0 +1,57 @@
+rol ()
+{
+  local carry reg=$(atoab -n8 -s0 $1);
+  local count=$2;
+  
+  echo "[-] ${reg}";
+  while (( count-- )); do
+    carry=${reg:0:1};
+    reg=${reg:1:7}${carry};
+    echo "[${carry}] ${reg}";
+  done
+}
+
+ror ()
+{
+  local carry reg=$(atoab -n8 -s0 $1);
+  local count=$2;
+  
+  echo "[-] ${reg}";
+  while (( count-- )); do
+    carry=${reg:7:1};
+    reg=${carry}${reg:0:7};
+    echo "[${carry}] ${reg}";
+  done
+}
+
+rcl ()
+{
+  local reg=$(atoab -n8 -s0 $1);
+  local carry=${3:-0};
+  local count=$2;
+  
+  echo "[${carry}] ${reg}";
+  while (( count-- )); do
+    reg=${reg}${carry};
+    carry=${reg:0:1};
+    reg=${reg:1:8};
+    echo "[${carry}] ${reg}";
+  done
+}
+
+
+rcr ()
+{
+  local reg=$(atoab -n8 -s0 $1);
+  local carry=${3:-0};
+  local count=$2;
+  
+  echo "[${carry}] ${reg}";
+  while (( count-- )); do
+    reg=${carry}${reg};
+    carry=${reg:8:1};
+    reg=${reg:0:8};
+    echo "[${carry}] ${reg}";
+  done
+}
+

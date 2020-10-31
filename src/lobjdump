@@ -2,24 +2,26 @@
 shopt -qs expand_aliases
 
 
-alias objdump='__objdump_wrapper '
-alias lobjdump='__objdump_wrapper --LESS '
+alias objdump='_OBJDUMP_PRINT=cat __objdump_wrapper '
+alias lobjdump='_OBJDUMP_PRINT=less __objdump_wrapper --LESS '
 alias __objdump_wrapper='__objdump_wrapper_fn '
+
 
 __objdump_wrapper_fn ()
 {
-   local _item _less _switches _args;
+   local _item _less _args _switches;
 
    for _item in $@;  do
      case $_item in
-       --LESS)   _less="less -F";;
+       --LESS)   _less=less;;
        -?*)      _switches="$_item $_switches";;
        *)        _args="$_item $_args";;
      esac;
    done;
+   _switches="${_switches:--dr} --disassembler-options=intel,intel-mnemonic "
 
-   eval "$(which objdump) ${_switches:- -dr} $_args" | ${_less:- cat};
+   eval "$(which objdump) $_switches $_args" | $_OBJDUMP_PRINT
 }
 
 
-[[ $0 == *lobjdump* ]] &&  eval "lobjdump $@"
+[[ $0 != *lobjdump* ]] ||  eval "lobjdump $@"

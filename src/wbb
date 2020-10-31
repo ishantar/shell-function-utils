@@ -1,0 +1,23 @@
+#!/bin/bash
+
+
+wbb ()
+{
+  local num=(${*/#!(+([0-9]))});
+    [ -z "${num}" ] && return 1;
+
+  local opts=(${*/#!(-+([A-Za-z])*([0-9]))});
+  local op=(${opts[@]//[^Nr]});
+    op=${op:0:1};
+    op=${op/N/-};
+    op=${op/r/~};
+  opts=(${opts[@]//[Nr]});
+    [[ "${opts[@]}" != *n* ]] && opts=(${opts[@]} n8);
+    [[ "${opts[@]}" != *s* ]] && opts=(${opts[@]} s4);
+
+    eval "atoab ${opts[@]/#/-} \$(echo \$(( 255 & (${op} ${num}) )) )";
+}
+
+
+[[ $0 != *wbb* ]] || eval "wbb ${@}"
+

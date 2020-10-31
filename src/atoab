@@ -3,34 +3,50 @@
 
 atoab ()
 {
-   optspec s,n:
-   [ -z ${opts[n]} ] &&  opts[n]=0
+   optspec s:,n:;
+   local onum inum=$(( ${args[@]} ));
 
-   local inum=$(( ${args[@]} ))
-   local bnum=
+   for onum in ${!opts[@]}; do
+     if [ _"${opts[${onum}]}" = _0 ]; then
+       unset opts[${onum}];
+     fi;
+   done;
+   onum=;
 
-   while (( inum )); do
-     bnum=$(( inum % 2 ))${bnum}
-     inum=$(( inum >> 1))
-   done
+   case ${inum} in
+     0)
+       onum=0 ;;
 
-   local nd=$(( ${opts[n]} - ${#bnum} ))
+     -[1-9]*([0-9]))
+       echo 1>&2 'negative :(' ;
+       return 1 ;;
 
-   if [ ${nd} -gt 0 ]; then
-     for nd in $(seq ${nd}); do
-       bnum=0${bnum}
-     done
-   fi
+     *(0)[1-9]*([0-9]))
+       while (( inum >= 1 )); do
+         onum=$(( ${inum} % 2 ))${onum};
+         let inum/=2;
+       done ;;
 
-   if (( ${opts[s]} )); then
-     bnum=$(echo 000${bnum} |
-             sed -r  's/^0{0,3}((.{4})*)$/\1/
-                      s/(.{4})/\1 /g
-                      s/ $//')
-   fi
+     *)
+       echo 1>&2 'garbage :(' ;
+       return 2 ;;
+   esac;
 
-   echo ${bnum}
+   inum=$(( ( ${opts[n]:-0} >= ${#onum} ) ? ${opts[n]:-${#onum}} : ${#onum} ));
+   let inum+=$(( (${inum} % ${opts[s]:-${inum}}) % ${opts[s]:-1} ));
+   let inum-=${#onum};
+
+   if (( inum > 0 )); then
+     inum="$(eval "echo {1..${inum}}")";
+     onum=${inum//+([0-9])?( )/0}${onum};
+   fi;
+
+   if [ -n "${opts[s]}" ]; then
+     onum="$( echo ${onum} | sed -r "{:0; s/([^ ]+)([01]{${opts[s]}})/\1 \2/g; t0; }" )";
+   fi;
+
+   echo "${onum}";
 }
 
 
-[[ $0 == *atoab* ]] &&  eval "atoab $@"
+[[ $0 != *atoab* ]] ||  eval "atoab $@"

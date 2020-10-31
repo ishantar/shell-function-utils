@@ -8,4 +8,4 @@ lth ()
 }
 
 
-[[ $0 == *lth* ]] &&  eval "lth $@"
+[[ $0 != *lth* ]] ||  eval "lth $@"

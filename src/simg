@@ -1,0 +1,146 @@
+#!/bin/bash
+
+__simg_parse_bookmarks() {
+
+ echo "_end_" |
+      cat -n "${1}" - |
+      sed -rn '/[[]s[]]/,$s/(.*[[][a-zA-Z0-9]+[]].*)/\1/p;
+               $p;' |
+      sed -rn '/>[[]/{ s/[ \t]*([0-9]+)[ \t]+[^<]*/\1\t/;
+                       s/([0-9]+\t)(<[^[][^>]*>[^<]*)*<[^>]+>[[]/\1\[/;
+                       s/(.*[]])<\/H3>.*/\1/p;
+                     };
+               $s/^[^0-9]*//p;';
+
+}
+
+
+simg() {
+ (
+  if [ x"${PWD##*\/}" == xi ]; then
+   cd ..;
+  fi;
+
+  local num operand scratch mode argn=1;
+
+
+  while [ $argn -le ${#} ]; do
+    scratch="${!argn}";
+    let argn++;
+
+    case ${scratch} in
+     *.html)
+        operand=${scratch} ;;
+
+     ?(-)+([0-9]))
+        num=${scratch#-};
+        mode=full;;
+
+     -*[np]*)
+        if [ x${mode} = xfull ]; then
+          echo 1>&2 error: cannot specify line number ranges in print mode;
+          return 4;
+        else
+          mode=print;
+        fi;;
+
+     -r*([0-9]))
+        if [ x${mode} == xprint ]; then
+          echo 1>&2 error: cannot specify line number ranges in print mode;
+          return 4;
+        else
+          mode=full;
+          num=${num:-${scratch//[^0-9]}};
+          if [ -z "${num}" -a -v ${argn} ]; then
+            num=${!argn};
+            let argn++;
+          fi;
+        fi ;;
+
+     *)
+        let argn--;
+        echo -e 1>&2 "unrecognized input at argument ${argn}: \"${!argn}\" of command:\\n"\
+                     "  \"${FUNCNAME[0]} $@\"";
+        return 2 ;;
+
+    esac;
+
+  done;
+
+  if [ ! -e ${operand:=bookmarks.html} ]; then
+    operand="./i/${operand}";
+    if [ ! -e "${operand}" ]; then
+      echo 1>&2 error: cannot find bookmarks file;
+      return 112;
+    fi;
+  fi;
+
+  # print in print mode
+  if [ x${mode} != xfull ]; then
+    __simg_parse_bookmarks "${operand}" | rg '\[i.*\]|_end_$' -n --passthru;
+    echo '';
+    return 0;
+
+  # fail if invalid operation
+  elif [ -z "${num}" ]; then
+    echo 1>&2 error: a line number range must be chosen when specifying -r;
+    return 3;
+
+  # else, use the ${num}'th range of bookmark-file lines from __simg_parse_bookmarks()
+  else
+    # get range's first/last lines
+    num=( $( __simg_parse_bookmarks "${operand}" |
+              sed -rn ${num}'{ s/[^0-9].*//; N; s/[^0-9\n].*//; s/\n/ /p; }'; ) );
+    case $? in
+      0) : ;;
+      [^1]*|1[^1]*|11[^2]) echo 1>&2 "error parsing bookmarks file \'${operand}\'" ;;&
+      112) return -1;;
+    esac;
+
+    # find urls in the range
+    scratch=( $(sed -rn ${num[0]},${num[1]}'s/.*[\"](http([^\"]|\\\")+[.]jpe?g)[\"].*/\1/p' "${operand}") );
+    argn=${#scratch[@]};
+
+    # if array is empty, complain
+    if ! (( argn )); then
+      echo 1>&2 error: no matching urls in lines ${num[0]}-${num[1]};
+      return 3;
+
+    # else, prepare path/filename needfuls
+    else
+      local outfile;
+      mkdir -p i;
+      mode=0000;                                                                                 # for substringing
+      operand=;                                                                                  # list of pids spawned
+      num=$(( $(echo i/*.jpg | sed -r 's/.*i\/0*([0-9]+).jpg/\1/; s/i\/\*.jpg/-1/') + $argn));   # number to begin begin new filenames at
+
+      # launch downloads (log per-process)
+      while (( argn-- )); do
+        outfile=${mode:0:4-${#num}}${num};
+         ( curl ${scratch[$argn]} > ./i/${outfile}.jpg 2>/dev/null;
+           echo -e "  ${?/#0/success}\\t ./i/${outfile}.jpg \\t ${scratch[$argn]}" > ./i/${outfile}.txt;
+         ) &
+        operand="${operand}$! ";
+        let num--;
+      done;
+
+      wait ${operand} 2>/dev/null;
+
+      # merge logs
+      operand="$( echo ./i/+([0-9]).txt |
+                    sed -r "s/.*([.]\/i\/${outfile}[.]txt.*)\$/\1/" )";
+      echo -e \\n----------------\\n |
+        cat - $operand >> ./i/outfiles.txt;
+      rm $operand;
+
+      # report results
+      sed -r '{ :0; N; $!b0; s/.*\n----------------//; }' ./i/outfiles.txt;
+           
+    fi;
+  fi;
+ )  
+}
+
+
+[[ $0 != *simg* ]] || eval "simg ${@}"
+
